@@ -1,10 +1,11 @@
+# <pep8 compliant>
+
 import bpy
 import os
 import random
 from mathutils import Vector
 from . import xps_material
 from . import xps_const
-
 
 ALPHA_MODE_CHANNEL = 'CHANNEL_PACKED'
 # Nodes Layout
@@ -128,7 +129,7 @@ def loadImage(textureFilepath):
     textureFilename = os.path.basename(textureFilepath)
     fileRoot, fileExt = os.path.splitext(textureFilename)
 
-    if (os.path.isfile(textureFilepath)):
+    if (os.path.exists(textureFilepath)):
         print("Loading Texture: " + textureFilename)
         image = bpy.data.images.load(filepath=textureFilepath, check_existing=True)
     else:
@@ -187,7 +188,10 @@ def makeNodesMaterial(xpsSettings, materialData, rootDir, mesh_da, meshInfo, fla
     if useAlpha:
         materialData.blend_method = 'BLEND'
 
-    node_tree.links.new(xpsShadeNode.outputs['Shader'], ouputNode.inputs['Surface'])
+    principledBSDFNode = node_tree.nodes.new(PRINCIPLED_SHADER_NODE)
+    principledBSDFNode.location = xpsShadeNode.location + Vector((1, 0))
+    node_tree.links.new(principledBSDFNode.outputs['BSDF'], ouputNode.inputs['Surface'])
+    # node_tree.links.new(xpsShadeNode.outputs['Shader'], ouputNode.inputs['Surface'])
 
     bump1Image = None
     bump2Image = None
@@ -224,11 +228,13 @@ def makeNodesMaterial(xpsSettings, materialData, rootDir, mesh_da, meshInfo, fla
         if (texType == xps_material.TextureType.DIFFUSE):
             imageNode.label = 'Diffuse'
             node_tree.links.new(imageNode.outputs['Color'], xpsShadeNode.inputs['Diffuse'])
+            node_tree.links.new(imageNode.outputs['Color'], principledBSDFNode.inputs['Base Color'])
             imageNode.location = xpsShadeNode.location + Vector((imagesPosX, imagesPosY * 1))
             mappingCoordNode.location = imageNode.location + Vector((-400, 0))
             diffuseImgNode = imageNode
             if useAlpha:
                 node_tree.links.new(imageNode.outputs['Alpha'], xpsShadeNode.inputs['Alpha'])
+                node_tree.links.new(imageNode.outputs['Alpha'], principledBSDFNode.inputs['Alpha'])
         elif (texType == xps_material.TextureType.LIGHT):
             imageNode.label = 'Light Map'
             imageNode.location = xpsShadeNode.location + Vector((imagesPosX, imagesPosY * 0))
@@ -238,12 +244,14 @@ def makeNodesMaterial(xpsSettings, materialData, rootDir, mesh_da, meshInfo, fla
             imageNode.label = 'Bump Map'
             imageNode.image.colorspace_settings.is_data = True
             node_tree.links.new(imageNode.outputs['Color'], xpsShadeNode.inputs['Bump Map'])
+            node_tree.links.new(imageNode.outputs['Color'], principledBSDFNode.inputs['Normal'])
             imageNode.location = xpsShadeNode.location + Vector((imagesPosX, imagesPosY * -2))
             mappingCoordNode.location = imageNode.location + Vector((-400, 0))
         elif (texType == xps_material.TextureType.SPECULAR):
             imageNode.label = 'Specular'
             imageNode.image.colorspace_settings.is_data = True
             node_tree.links.new(imageNode.outputs['Color'], xpsShadeNode.inputs['Specular'])
+            node_tree.links.new(imageNode.outputs['Color'], principledBSDFNode.inputs['Specular'])
             imageNode.location = xpsShadeNode.location + Vector((imagesPosX, imagesPosY * -1))
             mappingCoordNode.location = imageNode.location + Vector((-400, 0))
         elif (texType == xps_material.TextureType.ENVIRONMENT):
