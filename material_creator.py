@@ -243,8 +243,11 @@ def makeNodesMaterial(xpsSettings, materialData, rootDir, mesh_da, meshInfo, fla
         elif (texType == xps_material.TextureType.BUMP):
             imageNode.label = 'Bump Map'
             imageNode.image.colorspace_settings.is_data = True
+            normalMapNode = node_tree.nodes.new('ShaderNodeNormalMap')
+            normalMapNode.location = xpsShadeNode.location + Vector((imagesPosX, imagesPosY * -3))
+            node_tree.links.new(imageNode.outputs['Color'], normalMapNode.inputs['Color'])
+            node_tree.links.new(normalMapNode.outputs['Normal'], principledBSDFNode.inputs['Normal'])
             node_tree.links.new(imageNode.outputs['Color'], xpsShadeNode.inputs['Bump Map'])
-            node_tree.links.new(imageNode.outputs['Color'], principledBSDFNode.inputs['Normal'])
             imageNode.location = xpsShadeNode.location + Vector((imagesPosX, imagesPosY * -2))
             mappingCoordNode.location = imageNode.location + Vector((-400, 0))
         elif (texType == xps_material.TextureType.SPECULAR):
@@ -265,6 +268,7 @@ def makeNodesMaterial(xpsSettings, materialData, rootDir, mesh_da, meshInfo, fla
             node_tree.links.new(coordNode.outputs['Reflection'], mappingCoordNode.inputs['Vector'])
             node_tree.links.new(mappingCoordNode.outputs['Vector'], environmentNode.inputs['Vector'])
             node_tree.links.new(imageNode.outputs['Color'], xpsShadeNode.inputs['Environment'])
+            node_tree.links.new(imageNode.outputs['Color'], principledBSDFNode.inputs['Emission'])
         elif (texType == xps_material.TextureType.MASK):
             imageNode.label = 'Bump Mask'
             imageNode.image.colorspace_settings.is_data = True
