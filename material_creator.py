@@ -191,7 +191,6 @@ def makeNodesMaterial(xpsSettings, materialData, rootDir, mesh_da, meshInfo, fla
     principledBSDFNode = node_tree.nodes.new(PRINCIPLED_SHADER_NODE)
     principledBSDFNode.location = xpsShadeNode.location + Vector((1, 0))
     node_tree.links.new(principledBSDFNode.outputs['BSDF'], ouputNode.inputs['Surface'])
-    # node_tree.links.new(xpsShadeNode.outputs['Shader'], ouputNode.inputs['Surface'])
 
     bump1Image = None
     bump2Image = None
